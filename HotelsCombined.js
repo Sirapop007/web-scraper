@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
+import dayjs from "dayjs";
 
 puppeteer.use(StealthPlugin());
 
@@ -75,6 +76,12 @@ const openwebHotelCombined = async () => {
       const ratings = ratingsElement
         ? await page.evaluate((el) => el.innerText, ratingsElement)
         : null;
+
+      const datesElement = await box.$(".c2oma-user-info");
+      const date = datesElement
+        ? await page.evaluate((el) => el.innerText, datesElement)
+        : null;
+
       let rt = parseInt(ratings.split(".")[0]) / 2;
       let review_set = {
         store_name: infoName,
