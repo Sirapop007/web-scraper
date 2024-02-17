@@ -1,0 +1,63 @@
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "mongodb"
+//   url      = env("DATABASE_URL")
+// }
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  name     String
+  logo_url String?
+
+  reviews Review[]
+
+  @@map("organizations")
+}
+
+model Review {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  topic            String?
+  detail           String?
+  rating           Int?
+  language         String?
+  storename        String?
+  reference        String?
+  review_on        DateTime?
+  rating_dimension String         @default("rating")
+  shopcode         String?
+  metadata         ReviewMetadata
+
+  organization    Organization @relation(fields: [organization_id], references: [id])
+  organization_id String       @db.ObjectId
+
+  @@unique([storename, organization_id, rating, detail])
+  @@map("reviews")
+}
+
+type ReviewMetadata {
+  url      String
+  html     String?
+  reviewer String?
+}
