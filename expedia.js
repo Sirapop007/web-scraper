@@ -193,8 +193,7 @@ const OpenwebExpedia = async () => {
     }
 
     const jsonString = JSON.stringify(comments, null, 2);
-    const path =
-      "/Users/sirapop/AiiLAB_Junior/Project_ScapingData/allexpedia.json";
+    const path = "/Users/sirapop/AiiLAB_Junior/web-scraper/Expedia.json";
     fs.writeFile(path, jsonString, (err) => {
       if (err) {
         console.log("error: ", err);

@@ -48,7 +48,7 @@ const Openweb = async () => {
 
     const page = await browser.newPage();
     await page.goto(
-       "https://www.google.com/search?hl=en&q=google+seefah+central+world&oq=google+seefah+central+world&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIGCAEQLhhA0gEINjc2N2owajGoAgCwAgA&sourceid=chrome&ie=UTF-8#lrd=0x30e29f5abd9d8167:0xd2fdac1edb9e78a5,1,,,,",
+      "https://www.google.com/search?hl=en&q=google+seefah+central+world&oq=google+seefah+central+world&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIGCAEQLhhA0gEINjc2N2owajGoAgCwAgA&sourceid=chrome&ie=UTF-8#lrd=0x30e29f5abd9d8167:0xd2fdac1edb9e78a5,1,,,,",
       //"https://www.google.com/search?hl=en&q=seefah+%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%AB%E0%B8%A5%E0%B9%88%E0%B8%AD&oq=seefah+%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%AB%E0%B8%A5%E0%B9%88%E0%B8%AD&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIICAEQABgNGB7SAQkxMTMwNGowajSoAgCwAgA&sourceid=chrome&ie=UTF-8#lrd=0x30e29fa94ce7a4f1:0x44dc38acebc20c07,1,,,,",
       {
         waitUntil: "domcontentloaded",
@@ -194,7 +194,7 @@ const Openweb = async () => {
     cnt = 0;
 
     const jsonString = JSON.stringify(reviewText, null, 2);
-    const path = "/Users/sirapop/AiiLAB_Junior/Project_ScapingData/Google.json";
+    const path = "/Users/sirapop/AiiLAB_Junior/web-scraper/Google.json";
     fs.writeFile(path, jsonString, (err) => {
       if (err) {
         console.log("error: ", err);
