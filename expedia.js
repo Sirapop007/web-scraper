@@ -173,7 +173,7 @@ const OpenwebExpedia = async () => {
         // if (!exist) {
         //   await prisma.review.create({
         //     data: {
-        //       organization_id: new ObjectId("65c5a9760b5fff3be7a3afd3"),
+        //       organization_id: new ObjectId("65c5a9760b5fff3be7a3afd3"), 
         //       storename: TextTitle,
         //       topic: "",
         //       detail: reviews,
