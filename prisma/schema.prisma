@@ -57,7 +57,7 @@ model Review {
 }
 
 type ReviewMetadata {
-  url      String
+  url      String?
   html     String?
   reviewer String?
 }

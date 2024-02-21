@@ -6,6 +6,7 @@ import { franc } from "franc";
 import LanguageDetect from "languagedetect";
 
 puppeteer.use(StealthPlugin());
+
 const prisma = new PrismaClient();
 
 const checkLng = async (quote) => {
@@ -141,9 +142,14 @@ const openwebHotelCombined = async () => {
       let review_set = {
         store_name: infoName,
         review_on: formattedDate,
-        comment: reviews,
+        detail: reviews,
         rating: rt,
         language: lg,
+        reference: "HotelsCombined",
+        metadata: {
+          url: "https://www.hotelscombined.com/Hotel/The_Naka_Phuket_SHA_Plus.htm",
+          html: "",
+        },
       };
       comments.push(review_set);
 
@@ -163,6 +169,11 @@ const openwebHotelCombined = async () => {
             review_on: formattedDate,
             language: lg,
             reference: "HotelsCombined",
+            metadata: {
+              url: "https://www.hotelscombined.com/Hotel/The_Naka_Phuket_SHA_Plus.htm",
+              html: "",
+              reviewer: "",
+            },
           },
         });
       }
