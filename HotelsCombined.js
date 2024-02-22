@@ -1,13 +1,12 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
-import { PrismaClient } from "@prisma/client";
 import { franc } from "franc";
+import { ObjectId } from "bson";
 import LanguageDetect from "languagedetect";
+import path from "path";
 
 puppeteer.use(StealthPlugin());
-
-const prisma = new PrismaClient();
 
 const checkLng = async (quote) => {
   if (quote) {
@@ -76,89 +75,98 @@ const openwebHotelCombined = async () => {
 
     await getBotton(page);
 
-    let comments = [];
-    const allPage = await page.$$(
-      "#seoReviewsSection > div.MvR7 > div.Qu3l > div.c2oma > div.c2oma-review-content"
-    );
-    for (const box of allPage) {
-      const reviewsElement = await box.$(".c2oma-review-text");
-      const reviews = reviewsElement
-        ? await page.evaluate((el) => el.innerText, reviewsElement)
-        : null;
+    let allcomments = [];
+    try {
+      const allPage = await page.$$(
+        "#seoReviewsSection > div.MvR7 > div.Qu3l > div.c2oma > div.c2oma-review-content"
+      );
+      for (const box of allPage) {
+        const reviewsElement = await box.$(".c2oma-review-text");
+        const reviews = reviewsElement
+          ? await page.evaluate((el) => el.innerText, reviewsElement)
+          : null;
 
-      const ratingsElement = await box.$(".c2oma-rating");
-      const ratings = ratingsElement
-        ? await page.evaluate((el) => el.innerText, ratingsElement)
-        : null;
+        const ratingsElement = await box.$(".c2oma-rating");
+        const ratings = ratingsElement
+          ? await page.evaluate((el) => el.innerText, ratingsElement)
+          : null;
 
-      const datesElement = await box.$(".c2oma-user-info");
-      const date = datesElement
-        ? await page.evaluate((el) => el.innerText, datesElement)
-        : null;
+        const datesElement = await box.$(".c2oma-user-info");
+        const date = datesElement
+          ? await page.evaluate((el) => el.innerText, datesElement)
+          : null;
 
-      let formattedDate = null;
+        let formattedDate = null;
 
-      if (date) {
-        const [, monthYearPart] = date.split(", ");
+        if (date) {
+          const [, monthYearPart] = date.split(", ");
 
-        const today = new Date();
-        const [monthName, yearString] = monthYearPart.split(" ");
-        const year = parseInt(yearString, 10);
+          const today = new Date();
+          const [monthName, yearString] = monthYearPart.split(" ");
+          const year = parseInt(yearString, 10);
 
-        const monthNames = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-        const month = monthNames.indexOf(monthName) + 1;
+          const monthNames = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ];
+          const month = monthNames.indexOf(monthName) + 1;
 
-        const day = String(today.getDate()).padStart(2, "0");
+          const day = String(today.getDate()).padStart(2, "0");
 
-        formattedDate = `${year}-${String(month).padStart(2, "0")}-${day}`;
-      }
-
-      let lg = null;
-      if (reviews === "N/A") {
-        lg = null;
-      } else {
-        const lng = franc(reviews, { only: ["tha"] });
-        if (lng === "tha") {
-          lg = "Thai";
-        } else {
-          lg = await checkLng(reviews);
+          formattedDate = new Date(
+            Date.UTC(year, month - 1, parseInt(day, 10), 0, 0, 0, 0)
+          ).toISOString();
         }
+
+        let lg = null;
+        if (reviews === "N/A") {
+          lg = null;
+        } else {
+          const lng = franc(reviews, { only: ["tha"] });
+          if (lng === "tha") {
+            lg = "Thai";
+          } else {
+            lg = await checkLng(reviews);
+          }
+        }
+
+        let rt = parseInt(ratings.split(".")[0]) / 2;
+        let review_set = {
+          store_name: infoName,
+          date: formattedDate,
+          detail: reviews,
+          rating: rt,
+          language: lg,
+          reference: "HotelsCombined",
+          metadata: {
+            url: "https://www.hotelscombined.com/Hotel/The_Naka_Phuket_SHA_Plus.htm",
+            html: "",
+            reviewer: "",
+          },
+        };
+        allcomments.push(review_set);
       }
+    } catch (error) {
+      console.log("Error allpage");
+    }
 
-      let rt = parseInt(ratings.split(".")[0]) / 2;
-      let review_set = {
-        store_name: infoName,
-        review_on: formattedDate,
-        detail: reviews,
-        rating: rt,
-        language: lg,
-        reference: "HotelsCombined",
-        metadata: {
-          url: "https://www.hotelscombined.com/Hotel/The_Naka_Phuket_SHA_Plus.htm",
-          html: "",
-        },
-      };
-      comments.push(review_set);
-
-      const exist = await prisma.review.findFirst({
+    try {
+      const existingRecord = await prisma.review.findFirst({
         where: {
           detail: reviews,
         },
       });
-      if (!exist) {
+      if (!existingRecord) {
         await prisma.review.create({
           data: {
             organization_id: new ObjectId("65c5a9760b5fff3be7a3afd3"),
@@ -166,7 +174,7 @@ const openwebHotelCombined = async () => {
             topic: "",
             detail: reviews,
             rating: rt,
-            review_on: formattedDate,
+            reviewed_on: formattedDate,
             language: lg,
             reference: "HotelsCombined",
             metadata: {
@@ -177,13 +185,43 @@ const openwebHotelCombined = async () => {
           },
         });
       }
+    } catch (error) {
+      console.log("Error Database");
     }
 
-    console.log(comments);
+    // try {
+    //   allcomments.map(async (comment) => {
+    //     await prisma.review.upsert({
+    //       where: {
+    //         storename_organization_id_rating_detail: {
+    //           organization_id: new ObjectId("65c5a9760b5fff3be7a3afd3"),
+    //           storename: infoName,
+    //           detail: comment.detail || "",
+    //           rating: comment.rating,
+    //         },
+    //       },
+    //       update: {},
+    //       create: {
+    //         organization_id: new ObjectId("65c5a9760b5fff3be7a3afd3"),
+    //         storename: infoName,
+    //         topic: comment.topic || "",
+    //         detail: comment.detail || "",
+    //         rating: comment.rating,
+    //         review_on: comment.date,
+    //         language: comment.language,
+    //         reference: "HotelsCombined",
+    //         metadata: comment.metadata || {},
+    //       },
+    //     });
+    //   });
+    //   await Promise.all([mapUpsert]);
+    //   console.log("success");
+    // } catch (error) {
+    //   console.error("Transaction failed:", error);
+    // }
 
-    const jsonString = JSON.stringify(comments, null, 2);
-    const path = "/Users/sirapop/AiiLAB_Junior/web-scraper/HotelsCombined.json";
-    fs.writeFile(path, jsonString, (err) => {
+    const jsonString = JSON.stringify(allcomments, null, 2);
+    fs.writeFile(path.resolve("./HotelsCombined.json"), jsonString, (err) => {
       if (err) {
         console.log("error: ", err);
         return;
@@ -196,5 +234,4 @@ const openwebHotelCombined = async () => {
     console.log("error");
   }
 };
-
 openwebHotelCombined();
