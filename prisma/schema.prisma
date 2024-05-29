@@ -45,12 +45,11 @@ model Review {
   storename        String?
   reference        String?
   review_on        DateTime?
-  rating_dimension String         @default("rating")
+  rating_dimension String          @default("rating")
   shopcode         String?
-  metadata         ReviewMetadata
-
-  organization    Organization @relation(fields: [organization_id], references: [id])
-  organization_id String       @db.ObjectId
+  metadata         ReviewMetadata?
+  organization     Organization    @relation(fields: [organization_id], references: [id])
+  organization_id  String          @db.ObjectId
 
   @@unique([storename, organization_id, rating, detail])
   @@map("reviews")

@@ -2,6 +2,7 @@ import puppeteer from "puppeteer-extra";
 import fs from "fs";
 import dayjs from "dayjs";
 import { PrismaClient } from "@prisma/client";
+import { ObjectId } from "bson";
 
 const sleep = async (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -12,7 +13,7 @@ const prisma = new PrismaClient();
 const checkDate = (dateStr) => {
   const date = new Date();
   let cnt = 0;
-  if (!dateStr) return;
+  if (!dateStr) return date.toISOString().slice(0, 10);
 
   const vals = dateStr.split(" ");
 
@@ -35,26 +36,31 @@ const checkDate = (dateStr) => {
     return res.toISOString().slice(0, 10);
   }
 
-  return null;
+  return date.toISOString().slice(0, 10);
 };
 
 const Openweb = async () => {
   try {
     const browser = await puppeteer.launch({
       headless: false,
+      defaultViewport: null,
       ignoreDefaultArgs: ["--disable-extensions"],
       executablePath: "/opt/homebrew/bin/chromium",
+      timeout: 5000,
+      // protocolTimeout: 70000,
     });
 
     const page = await browser.newPage();
+
     await page.goto(
-      "https://www.google.com/search?hl=en&q=google+seefah+central+world&oq=google+seefah+central+world&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIGCAEQLhhA0gEINjc2N2owajGoAgCwAgA&sourceid=chrome&ie=UTF-8#lrd=0x30e29f5abd9d8167:0xd2fdac1edb9e78a5,1,,,,",
-      //"https://www.google.com/search?hl=en&q=seefah+%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%AB%E0%B8%A5%E0%B9%88%E0%B8%AD&oq=seefah+%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%AB%E0%B8%A5%E0%B9%88%E0%B8%AD&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIICAEQABgNGB7SAQkxMTMwNGowajSoAgCwAgA&sourceid=chrome&ie=UTF-8#lrd=0x30e29fa94ce7a4f1:0x44dc38acebc20c07,1,,,,",
+      "https://www.google.com/search?hl=en&q=%E0%B9%82%E0%B8%A3%E0%B8%87%E0%B8%9E%E0%B8%A2%E0%B8%B2%E0%B8%9A%E0%B8%B2%E0%B8%A5%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A0%E0%B8%B9%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%95+google+bussiness&sca_esv=9a62d5621dcf5b62&sxsrf=ADLYWIItd5CRGDBR63h1WKIkd_7PYERWcQ%3A1716955939320&ei=I6tWZuvpEpKfseMPsMKRwAk&ved=0ahUKEwirh-6m_7GGAxWST2wGHTBhBJgQ4dUDCBA&uact=5&oq=%E0%B9%82%E0%B8%A3%E0%B8%87%E0%B8%9E%E0%B8%A2%E0%B8%B2%E0%B8%9A%E0%B8%B2%E0%B8%A5%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A0%E0%B8%B9%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%95+google+bussiness&gs_lp=Egxnd3Mtd2l6LXNlcnAiU-C5guC4o-C4h-C4nuC4ouC4suC4muC4suC4peC4geC4o-C4uOC4h-C5gOC4l-C4nuC4oOC4ueC5gOC4geC5h-C4lSBnb29nbGUgYnVzc2luZXNzMgkQIRigARgKGCoyBxAhGKABGAoyBxAhGKABGAoyBxAhGKABGApIzzFQtwRYvDBwAngBkAEAmAH_BKABuR2qAQwwLjEzLjEuMS4yLjG4AQPIAQD4AQGYAhSgAoUewgIKEAAYsAMY1gQYR8ICBBAjGCfCAgUQABiABMICBhAAGBYYHsICCBAAGIAEGKIEwgIFECEYoAHCAgQQIRgKmAMAiAYBkAYIkgcMMi4xMy4xLjEuMi4xoAevdg&sclient=gws-wiz-serp#lrd=0x3050319642447ddd:0x1912f364775aed3a,1,,,,",
       {
         waitUntil: "domcontentloaded",
       }
     );
-    await sleep(4000);
+
+    await sleep(10000);
+
     // await scrollModalDialog(page, ".review-dialog-list");
     await page.evaluate(async () => {
       const element = document.querySelector(".review-dialog-list");
@@ -99,6 +105,9 @@ const Openweb = async () => {
       console.log(Days);
       return Days;
     });
+    // Save data to a file
+    // fs.writeFileSync("days.txt", Day.join("\n"), "utf-8");
+    // console.log("Data saved to days.txt");
     // console.log(Day);
 
     const DayFormat = Day.map((item) => {
@@ -152,7 +161,7 @@ const Openweb = async () => {
               review_on: "",
               topic: "",
               comment: ParentText,
-              raing: "",
+              rating: "",
             });
           }
         }
@@ -164,31 +173,34 @@ const Openweb = async () => {
     const storename = TextTitle;
     const ratings = rating;
     for (let rv of reviewText) {
-      rv.storename = storename;
-      rv.raing = parseInt(ratings[cnt].split(" ")[1]);
-      rv.reference = "Google_business";
+      rv.storename = "Bangkok Hospital Phuket";
+      rv.rating = parseInt(ratings[cnt].split(" ")[1]);
+      rv.reference = "Google Business";
       rv.review_on = DayFormat[cnt];
 
-      const existingRecord = await prisma.review.findFirst({
-        where: {
-          detail: rv.comment,
-        },
-      });
-
-      if (!existingRecord) {
-        await prisma.review.create({
-          data: {
-            organization_id: "65c5a9760b5fff3be7a3afd3",
-            storename: rv.storename,
-            review_on: new Date(rv.review_on),
-            topic: "",
-            detail: rv.comment,
-            rating: rv.raing,
-            reference: rv.reference,
-          },
-        });
+      if (
+        rv.comment ==
+        "I had to get one of those scripts. Met at the entrance by the guest management team  so sweet. No wait. Triage nurse did a double take and then immediately gave me an appointment same day. Had to wait until 1:30 pm then re present. Guided …"
+      ) {
+        console.log("found 1970 early wrong", rv.review_on);
       }
 
+      await prisma.review.create({
+        data: {
+          organization_id: new ObjectId("6646df6420051e55dfb1ef35"),
+          storename: rv.storename,
+          review_on: new Date(rv.review_on),
+          topic: "",
+          detail: rv.comment,
+          rating: rv.rating,
+          reference: rv.reference,
+          metadata: {
+            url: "https://www.google.com/search?hl=en&q=%E0%B9%82%E0%B8%A3%E0%B8%87%E0%B8%9E%E0%B8%A2%E0%B8%B2%E0%B8%9A%E0%B8%B2%E0%B8%A5%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A0%E0%B8%B9%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%95+google+bussiness&sca_esv=9a62d5621dcf5b62&sxsrf=ADLYWIItd5CRGDBR63h1WKIkd_7PYERWcQ%3A1716955939320&ei=I6tWZuvpEpKfseMPsMKRwAk&ved=0ahUKEwirh-6m_7GGAxWST2wGHTBhBJgQ4dUDCBA&uact=5&oq=%E0%B9%82%E0%B8%A3%E0%B8%87%E0%B8%9E%E0%B8%A2%E0%B8%B2%E0%B8%9A%E0%B8%B2%E0%B8%A5%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A0%E0%B8%B9%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%95+google+bussiness&gs_lp=Egxnd3Mtd2l6LXNlcnAiU-C5guC4o-C4h-C4nuC4ouC4suC4muC4suC4peC4geC4o-C4uOC4h-C5gOC4l-C4nuC4oOC4ueC5gOC4geC5h-C4lSBnb29nbGUgYnVzc2luZXNzMgkQIRigARgKGCoyBxAhGKABGAoyBxAhGKABGAoyBxAhGKABGApIzzFQtwRYvDBwAngBkAEAmAH_BKABuR2qAQwwLjEzLjEuMS4yLjG4AQPIAQD4AQGYAhSgAoUewgIKEAAYsAMY1gQYR8ICBBAjGCfCAgUQABiABMICBhAAGBYYHsICCBAAGIAEGKIEwgIFECEYoAHCAgQQIRgKmAMAiAYBkAYIkgcMMi4xMy4xLjEuMi4xoAevdg&sclient=gws-wiz-serp#lrd=0x3050319642447ddd:0x1912f364775aed3a,1,,,,",
+            html: "",
+            reviewer: "",
+          },
+        },
+      });
       cnt++;
     }
     cnt = 0;
@@ -210,3 +222,13 @@ const Openweb = async () => {
 };
 
 Openweb();
+
+// prisma.review
+//   .findMany({ where: { review_on: new Date("1970-01-01").toISOString() } })
+//   .then((res) => console.log(res.length));
+
+// prisma.review
+//   .deleteMany({
+//     where: { review_on: new Date("1970-01-01").toISOString() },
+//   })
+//   .then((res) => console.log("success fully"));
